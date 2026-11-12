@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tangents — jess</title>
+<meta name="description" content="Tangents keeps every detour of your creative research and turns the session into a map. Case study by Jess, design engineer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* tokens from the Figma file */
+    --ink: #161714;
+    --off-white: #fafafa;
+    --mist: #efefef;
+    --olive: #7a8450;
+    --olive-deep: #3f4a26;
+    --pink: #f29bb8;
+    --muted: #5d5f58;
+
+    --content: 1120px;          /* case study column, from the wireframe */
+    --gutter: 24px;
+    --nav-h: 97px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--off-white);
+    color: var(--ink);
+    font: 400 16px/1.6 Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  .wrap { width: min(var(--content), 100% - 2 * var(--gutter)); margin-inline: auto; }
+  :focus-visible { outline: 2px solid var(--olive-deep); outline-offset: 3px; border-radius: 4px; }
+
+  /* ---------- nav (same as home) ---------- */
+  .nav { display: flex; align-items: center; justify-content: space-between; height: var(--nav-h); }
+  .brand { display: flex; align-items: center; gap: 10px; font: italic 300 30px/1 Fraunces, serif; }
+  .nav-links { display: flex; align-items: center; gap: 36px; font: 300 14px/1.4 Inter, sans-serif; }
+  .nav-links a:not(.pill):hover { color: var(--olive); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 18px; border-radius: 999px; background: #fff;
+    font-weight: 400; box-shadow: 0 1px 2px rgba(22,23,20,.06), 0 6px 18px rgba(22,23,20,.05);
+  }
+  .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 56px 0 56px; }
+  .eyebrow { font: 300 14px/1.4 Inter, sans-serif; color: var(--olive); }
+  .hero h1 { margin: 20px 0 20px; font: 300 clamp(40px, 6vw, 56px)/1.1 Inter, sans-serif; letter-spacing: -0.035em; }
+  .lede { margin: 0; max-width: 46em; font: 300 clamp(17px, 1.6vw, 19px)/1.5 Inter, sans-serif; color: var(--muted); text-wrap: pretty; }
+  .hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .link-pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px;
+    background: #fff; font-size: 14px;
+    box-shadow: 0 0 0 1px rgba(22,23,20,.08), 0 1px 2px rgba(22,23,20,.05);
+    transition: box-shadow .25s ease, transform .25s ease;
+  }
+  .link-pill:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(22,23,20,.16), 0 6px 14px -6px rgba(22,23,20,.2); }
+  .link-pill svg { width: 11px; height: 11px; }
+
+  /* screenshots sit in a calm frame so the work reads clearly */
+  .frame { margin: 0; border-radius: 20px; overflow: hidden; background: #f4f3ef; box-shadow: inset 0 0 0 1px rgba(22,23,20,.06); }
+  .frame img { width: 100%; height: auto; }
+  .hero .frame { margin-top: 36px; }
+  /* screen recordings: silent loops with a pause control */
+  .clip { position: relative; }
+  .clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: #f4f3ef; }
+  .clip-toggle {
+    position: absolute; right: 12px; bottom: 12px; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    display: grid; place-items: center; color: var(--ink); background: rgba(255,255,255,.86);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    box-shadow: 0 0 0 1px rgba(22,23,20,.08), 0 4px 12px -4px rgba(22,23,20,.25);
+    opacity: 0; transition: opacity .2s ease, transform .2s ease;
+  }
+  .clip:hover .clip-toggle, .clip-toggle:focus-visible, .clip.paused .clip-toggle { opacity: 1; }
+  .clip-toggle:active { transform: scale(.92); }
+  .clip-toggle svg { width: 12px; height: 12px; }
+  .clip-toggle .i-play, .clip.paused .clip-toggle .i-pause { display: none; }
+  .clip.paused .clip-toggle .i-play { display: block; }
+  @media (hover: none) { .clip-toggle { opacity: 1; } }
+  figcaption { margin-top: 10px; font: 300 13px/1.5 Inter, sans-serif; color: var(--muted); }
+
+  .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; margin: 28px 0 0; }
+  .meta dt, .label { font: 400 11px/1.5 Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .meta dd { margin: 3px 0 0; font-size: 15px; line-height: 1.45; }
+
+  /* ---------- body: section list + content ---------- */
+  .body { display: grid; grid-template-columns: 200px minmax(0, 1fr); column-gap: 64px; padding: 24px 0 96px; }
+  .toc { position: sticky; top: 40px; align-self: start; }
+  .toc ol { list-style: none; margin: 8px 0 0; padding: 0; }
+  .toc a {
+    position: relative; display: block; padding: 8px 0; font: 300 15px/1.5 Inter, sans-serif; color: var(--muted);
+    transition: padding-left .3s cubic-bezier(.2,.8,.2,1), color .2s ease;
+  }
+  .toc a svg { position: absolute; left: 0; top: 13px; width: 14px; height: 14px; opacity: 0; transform: scale(.4); transition: opacity .25s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
+  .toc a:hover { color: var(--ink); }
+  .toc a[aria-current] { padding-left: 24px; color: var(--ink); font-weight: 400; }
+  .toc a[aria-current] svg { opacity: 1; transform: none; }
+
+  .content section { padding-bottom: 112px; scroll-margin-top: 32px; }
+  .content section:last-child { padding-bottom: 0; }
+  .content h2 { margin: 0 0 18px; font: 300 28px/1.25 Inter, sans-serif; letter-spacing: -0.03em; }
+  .content h3 { margin: 0 0 6px; font: 500 16px/1.4 Inter, sans-serif; }
+  .content p { margin: 0 0 16px; max-width: 42em; font-size: 17px; line-height: 1.6; text-wrap: pretty; }
+  .content .frame { margin-top: 28px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+  .tile { padding: 20px; border-radius: 16px; background: var(--mist); }
+  .tile p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+
+  .pull { margin: 24px 0; padding: 0; font: italic 300 clamp(24px, 3vw, 32px)/1.25 Fraunces, serif; color: var(--olive-deep); }
+
+  /* how it works: extension -> session data -> map */
+  .flow { margin: 28px 0 0; }
+  .flow ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr) 128px minmax(0, 1fr); gap: 20px; }
+  .flow .step { padding: 16px 16px 20px; border-radius: 20px; background: var(--mist); }
+  .flow .art { margin-bottom: 16px; border-radius: 12px; overflow: hidden; background: #fff; }
+  .flow .art svg { display: block; width: 100%; height: auto; }
+  .flow .step .label { margin-bottom: 2px; color: var(--olive); }
+  .flow .step p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .flow .pipe { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
+  .flow .pipe ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .flow .pipe li { padding: 4px 12px; border: 1px solid rgba(22,23,20,.14); border-radius: 999px; font: 400 13px/1.4 Inter, sans-serif; white-space: nowrap; }
+  .flow .arrow { width: 64px; height: 16px; margin-top: 4px; color: var(--olive); }
+  @media (max-width: 900px) {
+    .flow ol { grid-template-columns: 1fr; gap: 16px; }
+    .flow .pipe ul { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .flow .arrow { transform: rotate(90deg); margin: 14px 0 20px; }
+  }
+
+  /* video and prototype embeds */
+  .embed { position: relative; margin-top: 28px; border-radius: 20px; overflow: hidden; background: #141414; aspect-ratio: 16 / 9; box-shadow: inset 0 0 0 1px rgba(22,23,20,.06); }
+  .embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .proto { aspect-ratio: 16 / 10; background: #f4f3ef; }
+  .proto img { width: 100%; height: 100%; object-fit: cover; }
+  .proto .start {
+    position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px;
+    border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink);
+    background: rgba(244,243,239,.55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    transition: background .3s ease;
+  }
+  .proto .start:hover { background: rgba(244,243,239,.4); }
+  .proto .start span {
+    display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px; background: #fff; font-size: 15px;
+    box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 14px 30px -10px rgba(22,23,20,.3);
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .proto .start:hover span { transform: scale(1.04); }
+  .proto .start i { width: 7px; height: 7px; border-radius: 50%; background: var(--pink); }
+  .proto .start small { font: 300 13px/1.4 Inter, sans-serif; color: var(--muted); }
+
+  /* how to read the map: line styles carry the meaning, so the legend draws them */
+  .legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 32px; margin: 28px 0 0; padding: 0; }
+  .legend > div { display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: start; padding: 16px 0; border-top: 1px solid var(--mist); }
+  .legend svg { width: 56px; height: 24px; overflow: visible; }
+  .legend dt { font: 500 15px/1.4 Inter, sans-serif; }
+  .legend dd { margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+
+  .steps { list-style: none; margin: 8px 0 0; padding: 0; counter-reset: step; }
+  .steps li { display: grid; grid-template-columns: 40px 1fr; padding: 18px 0; border-top: 1px solid var(--mist); counter-increment: step; }
+  .steps li::before { content: "0" counter(step); font: 300 14px/1.7 Inter, sans-serif; color: var(--olive); font-variant-numeric: tabular-nums; }
+  .steps p { margin: 0; font-size: 15px; color: var(--muted); max-width: 44em; }
+
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+  .trio .frame, .duo .frame { margin: 0; }
+  .trio img { aspect-ratio: 4 / 3; object-fit: cover; }
+  .trio .z1 img { object-position: 50% 50%; }
+  .trio .z2 img { object-position: 35% 50%; }
+  .trio .z3 img { object-position: 35% 45%; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .duo img { aspect-ratio: 7 / 5; object-fit: cover; height: 100%; }
+  .duo .card-detail img { object-position: 49% 50%; transform: scale(1.55); transform-origin: 49% 47%; }
+  .duo .invite-detail img { object-position: 50% 0; transform: scale(1.25); transform-origin: 50% 0; }
+  .duo .panel-detail img { object-position: 50% 0; transform: scale(1.45); transform-origin: 50% 6%; }
+  .duo .share-detail img { object-position: 100% 0; transform: scale(1.9); transform-origin: 100% 0; }
+
+  .stat b { display: block; font: 300 34px/1.15 Inter, sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+  .credits { margin: 28px 0 0; padding: 0; }
+  .credits > div { display: grid; grid-template-columns: 160px 1fr; gap: 16px; padding: 14px 0; border-top: 1px solid var(--mist); font-size: 15px; }
+  .credits dt { font-weight: 500; }
+  .credits dd { margin: 0; color: var(--muted); }
+
+  /* ---------- structure added for the full write-up ---------- */
+  .content .embed.first { margin-top: 0; }
+  .content p.small { font-size: 15px; color: var(--muted); }
+  .feature .plain { margin: 10px 0 0; padding: 0; list-style: none; }
+  .feature .plain li { position: relative; padding: 7px 0 7px 18px; border-top: 1px solid var(--mist); font-size: 15px; line-height: 1.45; }
+  .feature .plain li::before { content: ""; position: absolute; left: 2px; top: 15px; width: 6px; height: 6px; border-radius: 50%; background: var(--pink); }
+  /* the prompt's title, set as a small olive label under the heading */
+  .content h2:has(+ .kicker) { margin-bottom: 4px; }
+  .content .kicker { margin: 0 0 20px; font: 300 15px/1.4 Inter, sans-serif; color: var(--olive); letter-spacing: 0; }
+  .content .big { font: 300 clamp(24px, 3vw, 30px)/1.25 Inter, sans-serif; letter-spacing: -0.03em; margin-bottom: 20px; }
+  .content .block { margin-top: 48px; }
+  .content h3.block { margin-top: 96px; margin-bottom: 16px; font: 400 20px/1.35 Inter, sans-serif; letter-spacing: -0.02em; }
+  .content a.u { text-decoration: underline; text-underline-offset: 3px; }
+  .tile .label { display: block; margin-bottom: 6px; color: var(--olive); }
+  .content .tiles + .tiles, .content p + .tiles { margin-top: 20px; }
+  /* a feature: what it does on the left, a close-up of it on the right */
+  .feature { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; margin-top: 56px; padding-top: 56px; border-top: 1px solid var(--mist); }
+  .feature.first { margin-top: 28px; padding-top: 0; border-top: 0; }
+  /* the legend row: same gap above it as below it, down to the next rule */
+  .feature.key { margin-top: 56px; }
+  @media (max-width: 640px) { .feature.key { margin-top: 40px; } }
+  .feature h3 { font: 400 18px/1.35 Inter, sans-serif; margin-bottom: 8px; }
+  .feature p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .content .feature .frame { margin: 0; }
+  .feature .legend { grid-template-columns: 1fr 1fr; gap: 0 20px; margin: 0; }
+  .feature .legend > div { grid-template-columns: 44px 1fr; gap: 12px; }
+  .feature .legend svg { width: 44px; }
+  .decisions { margin: 8px 0 0; padding: 0; }
+  .decisions > div { display: grid; grid-template-columns: 220px 1fr; gap: 20px; padding: 14px 0; border-top: 1px solid var(--mist); }
+  .decisions dt { font: 500 15px/1.5 Inter, sans-serif; }
+  .decisions dd { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .swatches { list-style: none; display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin: 20px 0 24px; padding: 0; }
+  .swatches i { display: block; aspect-ratio: 4 / 3; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(22,23,20,.08); margin-bottom: 8px; }
+  .swatches b { display: block; font: 500 13px/1.4 Inter, sans-serif; }
+  .swatches span { font: 300 12px/1.4 Inter, sans-serif; color: var(--muted); }
+  @media (max-width: 900px) { .feature { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+  @media (max-width: 640px) {
+    .decisions > div { grid-template-columns: 1fr; gap: 2px; }
+    .swatches { grid-template-columns: repeat(3, 1fr); }
+    .feature .legend { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- next ---------- */
+  .next { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 40px; margin-bottom: 56px; border-radius: 20px; background: var(--mist); transition: background .3s ease; }
+  .next:hover { background: #e9eadf; }
+  .next span { font: 300 14px/1.4 Inter, sans-serif; color: var(--muted); }
+  .next strong { font: 300 clamp(22px, 3vw, 30px)/1.2 Inter, sans-serif; letter-spacing: -0.03em; }
+
+  footer { border-top: 1px solid var(--mist); }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; height: 102px; font-size: 14px; }
+  footer nav { display: flex; gap: 28px; }
+
+  @media (max-width: 900px) {
+    .body { grid-template-columns: minmax(0, 1fr); padding-top: 0; }
+    /* the section list becomes a row of chips that stays under the top of the screen */
+    .toc { position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--gutter)) 32px; padding: 10px var(--gutter); background: rgba(250,250,250,.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--mist); }
+    .toc .label { display: none; }
+    .toc ol { display: flex; gap: 8px; margin: 0; overflow-x: auto; scrollbar-width: none; }
+    .toc ol::-webkit-scrollbar { display: none; }
+    .toc a, .toc a[aria-current] { padding: 6px 14px; border-radius: 999px; background: var(--mist); white-space: nowrap; font-size: 14px; }
+    .toc a[aria-current] { background: var(--ink); color: #fff; }
+    .toc a svg { display: none; }
+    .content section { scroll-margin-top: 72px; }
+  }
+  @media (max-width: 640px) {
+    :root { --nav-h: 72px; }
+    .nav-links { gap: 18px; }
+    .nav-links a:not(.pill) { display: none; }
+    .hero { padding: 28px 0 40px; }
+    .meta { grid-template-columns: 1fr 1fr; }
+    .tiles, .trio, .duo, .legend { grid-template-columns: 1fr; }
+    .trio img { aspect-ratio: 16 / 10; }
+    .content section { padding-bottom: 72px; }
+    .content h3.block { margin-top: 64px; }
+    .feature { gap: 24px; margin-top: 40px; padding-top: 40px; }
+    .content p { font-size: 16px; }
+    .credits > div { grid-template-columns: 1fr; gap: 2px; }
+    .next { flex-direction: column; align-items: flex-start; padding: 28px; }
+    footer .wrap { flex-direction: column; justify-content: center; gap: 12px; height: auto; padding: 28px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap nav">
+  <a class="brand" href="index.html" aria-label="jess — home">
+    <svg width="30" height="30" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>
+    jess
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="about.html">(about)</a>
+    <a href="index.html#work">(work)</a>
+    <a href="play.html">(play)</a>
+    <a class="pill" href="index.html#resume"><i></i>Resume</a>
+  </nav>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <h1>Tangents</h1>
+    <p class="lede">A browser companion and desktop map that keep every detour of your creative research, so the path to an idea is something you can see, share and build on. I designed and prototyped the desktop map.</p>
+    <div class="hero-links">
+      <a class="link-pill" href="https://claude.ai/artifact/PKqLQ8oW4z3Dedxh1X1jXA#desktop" target="_blank" rel="noopener">Live prototype <svg viewBox="0 0 11 11" aria-hidden="true"><path d="M2 9 9 2M3.5 2H9v5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="link-pill" href="https://devpost.com/software/tangent-ciyafm" target="_blank" rel="noopener">Devpost <svg viewBox="0 0 11 11" aria-hidden="true"><path d="M2 9 9 2M3.5 2H9v5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="link-pill" href="https://youtu.be/ALcEMYuS9DA" target="_blank" rel="noopener">Demo video <svg viewBox="0 0 11 11" aria-hidden="true"><path d="M2 9 9 2M3.5 2H9v5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+
+    <figure class="frame clip">
+      <video src="tangents/clips/cover.mp4" poster="tangents/clips/cover.jpg" width="1440" height="900" autoplay muted loop playsinline preload="metadata" aria-label="Screen recording of the Tangents desktop map. It shows a whole research session on kintsugi as one trail, zooms slowly into the middle of it, then pulls back out to the whole map."></video>
+    </figure>
+
+    <dl class="meta">
+      <div><dt>Role</dt><dd>Product design and prototyping, desktop map</dd></div>
+      <div><dt>Team</dt><dd>3 designers</dd></div>
+      <div><dt>Timeline</dt><dd>UXC NYU Fall Design-a-thon, November 2026</dd></div>
+      <div><dt>Tools</dt><dd>Figma, FigJam, Claude</dd></div>
+    </dl>
+  </section>
+
+  <div class="wrap body">
+    <nav class="toc" aria-label="Sections">
+      <div class="label">Contents</div>
+      <ol>
+        <li><a href="#prompt"><svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>Prompt</a></li>
+        <li><a href="#solution"><svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>Solution</a></li>
+        <li><a href="#users"><svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>Users</a></li>
+        <li><a href="#process"><svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>Process</a></li>
+        <li><a href="#try"><svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>Try it</a></li>
+      </ol>
+    </nav>
+
+    <div class="content">
+
+      <section id="prompt">
+        <h2>Prompt</h2>
+        <p class="kicker">The Journey Matters</p>
+        <p>The 2026 UXC NYU Fall Design-a-thon started from a worry about AI. The more we rely on it, the more everything gets optimised for speed: less time, fewer people, fewer steps. The prompt asked what gets lost when we always take the fastest path, such as the mistakes that teach us, the unexpected discoveries, and the experiences that change how we approach what comes next.</p>
+        <blockquote class="pull">&ldquo;Design a product that reimagines what it means to make progress&mdash;one that values the journey, not just the destination.&rdquo;</blockquote>
+        <p>A few takes on this felt obvious, and we wanted to stay away from them. We didn't want to make something that says: you went from A to B, and here is the journey in between. So we asked ourselves: how can we create a tool that is compelling to use and also reimagines what it's like to see your own journey?</p>
+        <p>That led us to creative research, where the journey isn't a straight line and the &ldquo;inefficient&rdquo; part is the work. A project starts with a loose feeling, then turns into hours across Pinterest, are.na, articles and a dozen open tabs. That wandering is where the thinking happens, and almost none of it sticks around. When someone in critique asks how you got here, you piece it together from memory.</p>
+      </section>
+
+      <section id="solution">
+        <h2>Solution</h2>
+        <p>Tangents has two parts. A browser extension keeps track of where you go while you explore. A desktop map lays the whole session out afterward as a timeline you can pan, zoom and edit.</p>
+        <figure class="flow">
+          <ol>
+            <li class="step">
+              <div class="art">
+                <svg viewBox="0 0 320 200" aria-hidden="true">
+                  <rect width="320" height="28" fill="#f6f6f3"/>
+                  <circle cx="14" cy="14" r="3" fill="#d6d6cf"/><circle cx="24" cy="14" r="3" fill="#d6d6cf"/><circle cx="34" cy="14" r="3" fill="#d6d6cf"/>
+                  <rect x="52" y="8" width="150" height="12" rx="6" fill="#e9e9e3"/>
+                  <g>
+                    <rect x="16" y="36" width="66" height="70" rx="6" fill="#dfe3cf"/><rect x="16" y="114" width="66" height="50" rx="6" fill="#efe6dc"/><rect x="16" y="172" width="66" height="40" rx="6" fill="#e9e9e3"/>
+                    <rect x="90" y="36" width="66" height="46" rx="6" fill="#e9e9e3"/><rect x="90" y="90" width="66" height="78" rx="6" fill="#f7d9e3" stroke="#ff0049" stroke-width="2"/><rect x="90" y="176" width="66" height="40" rx="6" fill="#dfe3cf"/>
+                    <rect x="164" y="36" width="66" height="84" rx="6" fill="#e6dccf"/><rect x="164" y="128" width="66" height="80" rx="6" fill="#dfe3cf"/>
+                    <rect x="238" y="36" width="66" height="54" rx="6" fill="#dfe3cf"/><rect x="238" y="98" width="66" height="50" rx="6" fill="#e9e9e3"/>
+                  </g>
+                  <circle cx="144" cy="102" r="7" fill="#ff0049"/><path d="M140.6 102.2l2.3 2.3 4.4-4.6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path transform="translate(128 140)" d="M0 0V14L4 10.5 6.5 16 8.5 15 6 9.8H11Z" fill="#161714" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+                  <rect x="190" y="160" width="118" height="28" rx="14" fill="#161714"/>
+                  <circle cx="206" cy="174" r="4" fill="#ff0049"/>
+                  <text x="216" y="178" fill="#fff" font-family="Inter, sans-serif" font-size="11">8 saved · 12:04</text>
+                </svg>
+              </div>
+              <div class="label">Step 1</div>
+              <h3>The extension tracks your session</h3>
+              <p>While you browse, it follows what you save and where you wander.</p>
+            </li>
+            <li class="pipe">
+              <div class="label">Session data</div>
+              <ul>
+                <li>Saved items</li>
+                <li>Sources</li>
+                <li>Timestamps</li>
+                <li>Content types</li>
+                <li>Keywords</li>
+              </ul>
+              <svg class="arrow" viewBox="0 0 64 16" aria-hidden="true"><path d="M2 8H58M52 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </li>
+            <li class="step">
+              <div class="art">
+                <svg viewBox="0 0 320 200" aria-hidden="true">
+                  <defs><pattern id="flow-dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="8" cy="8" r=".9" fill="#dcdcd5"/></pattern></defs>
+                  <rect width="320" height="200" fill="url(#flow-dots)"/>
+                  <path d="M102 90C102 60 120 48 140 48" fill="none" stroke="#a9a9a2" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 6"/>
+                  <path d="M240 118C240 150 250 160 268 160" fill="none" stroke="#7fc241" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M20 104H186M214 104H314" stroke="#a9a9a2" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M186 104H214" stroke="#ff0049" stroke-width="2"/>
+                  <circle cx="20" cy="104" r="4" fill="#161714"/>
+                  <g stroke="rgba(22,23,20,.1)">
+                    <rect x="36" y="90" width="36" height="28" rx="5" fill="#dfe3cf"/><rect x="84" y="90" width="36" height="28" rx="5" fill="#dfe3cf"/><rect x="132" y="90" width="36" height="28" rx="5" fill="#efe6dc"/>
+                    <rect x="222" y="90" width="36" height="28" rx="5" fill="#f7d9e3"/><rect x="270" y="90" width="36" height="28" rx="5" fill="#f7d9e3"/>
+                    <rect x="140" y="34" width="36" height="28" rx="5" fill="#e9e9e3"/>
+                  </g>
+                  <rect x="268" y="146" width="36" height="28" rx="5" fill="#eaf5df" stroke="#7fc241" stroke-width="1.5"/>
+                  <circle cx="200" cy="104" r="7" fill="#fff" stroke="#ff0049" stroke-width="2"/>
+                  <rect x="40" y="36" width="46" height="32" rx="3" fill="#fff2a8"/><path d="M47 47H79M47 55H70" stroke="#b9a94a" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="label">Step 2</div>
+              <h3>Tangents visualizes it</h3>
+              <p>The desktop app turns that data into a map of the session: the main trail, each detour and every shift in direction.</p>
+            </li>
+          </ol>
+        </figure>
+
+        <h3 class="block">1. The browser extension</h3>
+        <p>Tangents Companion sits quietly over the sites you already use. When you open a creative tool like Pinterest, are.na or an article, it asks &ldquo;Start a tangent?&rdquo; Nothing is captured until you choose Start.</p>
+        <div class="feature first">
+          <div>
+            <h3>What it collects</h3>
+            <ul class="plain">
+              <li>The images, links, quotes and articles you save</li>
+              <li>Where each one came from, and when you found it</li>
+              <li>What kind of content it is</li>
+              <li>The keywords and artists that keep coming up</li>
+            </ul>
+          </div>
+          <figure class="frame clip">
+            <video src="tangents/clips/companion.mp4" poster="tangents/clips/companion.jpg" width="1200" height="750" autoplay muted loop playsinline preload="none" aria-label="Screen recording, close up, of Tangents Companion over a moodboard site. Start is clicked on the Start a tangent pill, a pin is opened and saved, and the session panel is opened to show the history, keywords, and Map by hand and End session buttons."></video>
+          </figure>
+        </div>
+        <p class="block small">The panel shows the session's name, the branch you are on, a timer and how many items are saved, so you can always see what Tangents has. We left screen recording out. Ending the session, or choosing Map by hand, hands everything to the desktop map.</p>
+
+        <h3 class="block">2. The desktop map</h3>
+        <p>This is the part I designed and built. The session becomes a timeline that starts where you started and runs through each stage of the research in its own colour.</p>
+
+        <div class="feature first key">
+          <div>
+            <h3>How to read the map</h3>
+          </div>
+          <dl class="legend">
+            <div><svg viewBox="0 0 56 24" aria-hidden="true"><path d="M2 12H54" stroke="#a9a9a2" stroke-width="2" stroke-linecap="round"/></svg><div><dt>Trail</dt><dd>Solid grey: the main path.</dd></div></div>
+            <div><svg viewBox="0 0 56 24" aria-hidden="true"><path d="M2 5C22 5 30 19 54 19" fill="none" stroke="#a9a9a2" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 6"/></svg><div><dt>Detour</dt><dd>Dashed: a side trip.</dd></div></div>
+            <div><svg viewBox="0 0 56 24" aria-hidden="true"><path d="M2 12H20M36 12H54" stroke="#ff0049" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="12" r="6.5" fill="#fff" stroke="#ff0049" stroke-width="2"/></svg><div><dt>Shift</dt><dd>Pink: your direction changed.</dd></div></div>
+            <div><svg viewBox="0 0 56 24" aria-hidden="true"><path d="M2 19C24 19 28 5 54 5" fill="none" stroke="#7fc241" stroke-width="2" stroke-linecap="round"/></svg><div><dt>Branch</dt><dd>Green: a direction you added.</dd></div></div>
+          </dl>
+        </div>
+
+        <div class="feature">
+          <div>
+            <h3>The timeline</h3>
+            <p>Everything you saved becomes a card, laid out in the order you found it. The timeline sits on an infinite canvas, so you can see the whole session at once, zoom into any stretch of it, and pan along the trail from start to finish.</p>
+          </div>
+          <figure class="frame clip">
+            <video src="tangents/clips/timeline.mp4" poster="tangents/clips/timeline.jpg" width="1200" height="750" autoplay muted loop playsinline preload="none" aria-label="Screen recording of the Tangents timeline. It starts on the whole session, zooms into the first cards on the trail, pans from left to right along the timeline to the End session button, then zooms back out to the whole session."></video>
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div>
+            <h3>The toolbar</h3>
+            <p>The map is yours to edit. From the toolbar you can add notes beside your references, draw connections between cards, branch off in a new direction, leave comments, and remove what you don't need.</p>
+          </div>
+          <figure class="frame clip">
+            <video src="tangents/clips/toolbar.mp4" poster="tangents/clips/toolbar.jpg" width="1200" height="750" autoplay muted loop playsinline preload="none" aria-label="Screen recording, close up of the toolbar at the bottom of the map. The cursor selects each tool in turn: note, connect, branch off, comment and remove. Each one shows its name and a short hint above the toolbar. Then it returns to Select."></video>
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div>
+            <h3>End with a summary</h3>
+            <p>End session opens three cards: the session at a glance, where your attention went, and ways to take it with you. Nothing is final, and you can always keep exploring.</p>
+          </div>
+          <figure class="frame clip">
+            <video src="tangents/clips/recap.mp4" poster="tangents/clips/recap.jpg" width="1200" height="750" autoplay muted loop playsinline preload="none" aria-label="Screen recording, close up. End session is clicked at the end of the trail and a summary card opens. It steps through three parts: the session at a glance, where your attention went with the words that kept coming back, and options to copy a bibliography, copy as MCP or share, with End session and Keep exploring buttons."></video>
+          </figure>
+        </div>
+
+        <div class="feature">
+          <div>
+            <h3>Share it</h3>
+            <p>Copy a view-only link for critique or your portfolio, or copy the session as context for Claude.</p>
+          </div>
+          <figure class="frame clip">
+            <video src="tangents/clips/share.mp4" poster="tangents/clips/share.jpg" width="1200" height="750" autoplay muted loop playsinline preload="none" aria-label="Screen recording, close up. The Share button opens a menu with two options, copy link to clipboard and copy as MCP. Copy link is clicked and a confirmation appears."></video>
+          </figure>
+        </div>
+
+      </section>
+
+      <section id="users">
+        <h2>Users</h2>
+        <p>We mainly designed for design students. We are design students, we feel this every time we start a project, and we are the ones asked to explain our process in studio and critique.</p>
+        <p>It would work just as well for other creatives and researchers: anyone whose work starts with gathering references, following where they lead, and later needing to remember where they've been.</p>
+      </section>
+
+      <section id="process">
+        <h2>Process</h2>
+        <p>We moved from a broad brainstorm to a narrow, opinionated product. Each step cut something we liked so the core idea could stay clear.</p>
+        <ol class="steps">
+          <li><div><h3>FigJam</h3><p>We brainstormed names and sketched the flow from the first pop-up to the final map, then wrote a PRD to decide what was essential. We chose Tangents over Mapped, Unfold, Trace and Blueprint: a tangent is a detour you take on purpose.</p></div></li>
+          <li><div><h3>Figma</h3><p>We built the visual design system around pixel-style forms, like the stepped logo that looks like a path that keeps turning. Angela Lau led the branding.</p></div></li>
+          <li><div><h3>Vibe coding</h3><p>We each built a different part with Claude, then combined our code into one connected prototype.</p></div></li>
+        </ol>
+      </section>
+
+      <section id="try">
+        <h2>Try it</h2>
+        <div class="embed proto first" id="proto">
+          <img src="tangents/proto-landing.png" width="1440" height="900" loading="lazy" alt="">
+          <button class="start" type="button" aria-label="Load the live Tangents desktop prototype">
+            <span><i></i>Explore the live prototype</span>
+            <small>Drag to pan, scroll to zoom, click a card</small>
+          </button>
+        </div>
+        <figcaption>The desktop map I built, running here. <a class="u" href="tangents/app.html" target="_blank" rel="noopener">Open it full screen</a>, or try the <a class="u" href="tangents/browser.html" target="_blank" rel="noopener">browser companion</a>.</figcaption>
+
+        <dl class="credits">
+          <div><dt>Jessica Liu</dt><dd>Desktop map: user flow, infinite canvas, core features, prototype</dd></div>
+          <div><dt>Anita Yan</dt><dd>Browser extension (Tangents Companion), desktop interaction refinements, demo video</dd></div>
+          <div><dt>Angela Lau</dt><dd>Branding: logo, colours, design system</dd></div>
+        </dl>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="wrap">
+    <a class="next" href="index.html#work">
+      <span>More projects are on the way</span>
+      <strong>Back to all work</strong>
+    </a>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>jess &nbsp;·&nbsp; Design engineer, New York</span>
+    <nav aria-label="Footer"><a href="#">LinkedIn</a><a href="#">Email</a><a href="index.html#resume">Resume</a></nav>
+  </div>
+</footer>
+
+<!-- shared logo mark, same Figma component as the home page -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="logoFill" gradientUnits="userSpaceOnUse" cx="60" cy="60" r="60">
+      <stop stop-color="#FBDCE6"/><stop offset="1" stop-color="#F29BB8"/>
+    </radialGradient>
+    <g id="logo" transform="translate(-50 -50) scale(.833333)">
+      <path d="M86.4004 0C104.957 0.000212344 120 15.0432 120 33.5996C120 44.3086 114.99 53.8472 107.186 60C114.99 66.1528 120 75.6914 120 86.4004C120 104.957 104.957 120 86.4004 120C75.6914 120 66.1528 114.99 60 107.186C53.8472 114.99 44.3086 120 33.5996 120C15.0432 120 0.000212357 104.957 0 86.4004C0 75.6917 5.00984 66.1528 12.8135 60C5.00984 53.8472 0 44.3083 0 33.5996C0.000210283 15.0432 15.0432 0.000210295 33.5996 0C44.3083 0 53.8472 5.00984 60 12.8135C66.1528 5.00984 75.6917 0 86.4004 0ZM60 54.3848C58.3559 56.4702 56.4702 58.3559 54.3848 60C56.47 61.644 58.356 63.5291 60 65.6143C61.6438 63.5293 63.5293 61.6438 65.6143 60C63.5291 58.356 61.644 56.47 60 54.3848Z" fill-rule="evenodd" clip-rule="evenodd" fill="url(#logoFill)"/>
+      <path d="M60 45.6L63.8693 56.1307L74.4 60L63.8693 63.8693L60 74.4L56.1307 63.8693L45.6 60L56.1307 56.1307L60 45.6Z" fill="#fff"/>
+    </g>
+  </defs>
+</svg>
+
+<script>
+(() => {
+  /* section list: highlight the section in view */
+  const links = [...document.querySelectorAll('.toc a')];
+  const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+  const setCurrent = i => links.forEach((a, k) => {
+    if (k === i) {
+      if (!a.hasAttribute('aria-current')) {
+        a.setAttribute('aria-current', 'true');
+        const row = a.closest('ol');                       // on mobile, keep the active chip in view
+        if (row.scrollWidth > row.clientWidth) row.scrollTo({ left: a.offsetLeft - 24, behavior: 'smooth' });
+      }
+    } else a.removeAttribute('aria-current');
+  });
+  const update = () => {
+    const line = innerHeight * .3;
+    let i = 0;
+    sections.forEach((s, k) => { if (s.getBoundingClientRect().top <= line) i = k; });
+    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2) i = sections.length - 1;
+    setCurrent(i);
+  };
+  addEventListener('scroll', update, { passive: true });
+  addEventListener('resize', update);
+  update();
+
+  /* clips: play only while on screen, start paused for reduced motion, and can always be paused by hand */
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.clip').forEach(fig => {
+    const v = fig.querySelector('video'), b = document.createElement('button');
+    let wanted = !reduced;                                  // what the visitor last asked for
+    b.type = 'button'; b.className = 'clip-toggle';
+    b.innerHTML = '<svg class="i-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2v8M9 2v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2l6 4-6 4z" fill="currentColor"/></svg>';
+    const sync = () => { fig.classList.toggle('paused', !wanted); b.setAttribute('aria-label', wanted ? 'Pause clip' : 'Play clip'); };
+    b.addEventListener('click', () => { wanted = !wanted; wanted ? v.play().catch(() => {}) : v.pause(); sync(); });
+    fig.appendChild(b);
+    if (reduced) { v.removeAttribute('autoplay'); v.pause(); }
+    sync();
+    new IntersectionObserver(([en]) => { en.isIntersecting && wanted ? v.play().catch(() => {}) : v.pause(); }, { threshold: .25 }).observe(v);
+  });
+
+  /* live prototype: only loads when asked, so it never slows the page or traps the scroll */
+  const proto = document.getElementById('proto');
+  proto.querySelector('.start').addEventListener('click', () => {
+    const f = document.createElement('iframe');
+    f.src = 'tangents/app.html';
+    f.title = 'Tangents desktop map, live prototype';
+    proto.replaceChildren(f);
+    f.focus();
+  });
+})();
+</script>
+</body>
+</html>

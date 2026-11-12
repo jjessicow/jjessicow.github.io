@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jess — design engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,300&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* tokens from the Figma file */
+    --ink: #161714;
+    --off-white: #fafafa;
+    --mist: #efefef;
+    --olive: #7a8450;
+    --olive-deep: #3f4a26;
+    --pink: #f29bb8;
+
+    --content: 1200px;          /* nav / hero bar content width */
+    --gutter: 24px;
+    --pond-h: clamp(380px, 45.5vw, 546px); /* 780px in Figma, 30% shorter */
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--off-white);
+    color: var(--ink);
+    font: 400 16px/1.55 Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(var(--content), 100% - 2 * var(--gutter)); margin-inline: auto; }
+
+  /* ---------- nav ---------- */
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 97px; }
+  .brand { display: flex; align-items: center; gap: 10px; font: italic 300 30px/1 Fraunces, serif; }
+  .nav-links { display: flex; align-items: center; gap: 36px; font: 300 14px/1.4 Inter, sans-serif; }
+  .nav-links a:not(.pill):hover { color: var(--olive); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 18px; border-radius: 999px; background: #fff;
+    font-weight: 400; box-shadow: 0 1px 2px rgba(22,23,20,.06), 0 6px 18px rgba(22,23,20,.05);
+  }
+  .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); }
+
+  /* ---------- pond ---------- */
+  .pond {
+    position: relative;
+    height: var(--pond-h);
+    border-radius: 36px;
+    overflow: hidden;
+    isolation: isolate;
+    background: #f4f3ef;        /* flat paper, no colour wash */
+  }
+  .pond canvas, .pond .leaves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pond canvas { z-index: 0; }
+  .pond .leaves { z-index: 1; pointer-events: none; }
+
+  .leaf, .bloom {
+    position: absolute; left: 0; top: 0; display: block;
+    will-change: transform;
+  }
+  .leaf { mix-blend-mode: multiply; }   /* overlapping leaves overprint like two ink passes */
+  .leaf svg { display: block; overflow: visible; }
+
+  /* ---------- intro sentence ---------- */
+  .intro {
+    position: absolute; inset: 0; z-index: 2; margin: 0;
+    display: grid; place-content: center; justify-items: center;
+    pointer-events: none; text-align: center;
+    font: 300 clamp(22px, 3.5vw, 44px)/1.2 Inter, sans-serif;
+    letter-spacing: -0.03em;
+    padding: 0 20px;
+  }
+  .intro .line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .12em .26em; }
+  .intro .name { font: italic 300 1.1em/1 Fraunces, serif; letter-spacing: 0; color: var(--olive-deep); }
+  .chip {
+    display: inline-block; width: 1.05em; height: .8em; border-radius: .2em;
+    border: .05em solid #fff; box-shadow: 0 .1em .3em rgba(22,23,20,.14);
+  }
+  .chip.c-work { background: #d9d6cc url(me.jpg) center / cover no-repeat; width: .9em; height: 1.18em; --r: -4deg; --t: -5deg; }
+  .chip.stamp { width: .72em; height: .9em; background: linear-gradient(160deg, #f8c3d4, #f29bb8); transform: rotate(5deg); }
+  .apple { height: 1.15em; width: auto; --r: -6deg; --t: -5deg; }
+  .chip.photo { background: linear-gradient(160deg, #e9e9e6, #c9cbc4); transform: rotate(6deg); }
+  /* postage stamp: white paper with a perforated edge, photo cropped to the taxi */
+  .stamp { display: inline-block; --r: 6deg; --t: 5deg; filter: drop-shadow(0 .06em .12em rgba(22,23,20,.22)); }
+  .stamp-paper {
+    --p: .13em;                      /* perforation pitch */
+    display: block; padding: .1em; background: #fff;
+    -webkit-mask:
+      linear-gradient(#000 0 0) center / calc(100% - var(--p)) calc(100% - var(--p)) no-repeat,
+      radial-gradient(circle, #0000 34%, #000 37%) calc(var(--p) / -2) calc(var(--p) / -2) / var(--p) var(--p) round;
+    mask:
+      linear-gradient(#000 0 0) center / calc(100% - var(--p)) calc(100% - var(--p)) no-repeat,
+      radial-gradient(circle, #0000 34%, #000 37%) calc(var(--p) / -2) calc(var(--p) / -2) / var(--p) var(--p) round;
+  }
+  .stamp-img {
+    display: block; width: 1.2em; height: 1em;
+    background: url(taxi.webp) 0% 98.9% / 149.3% auto no-repeat;
+  }
+
+  /* hover lift: the inline images rise, lean a little further and settle with a soft spring */
+  .intro .hov {
+    pointer-events: auto;
+    transform: rotate(var(--r, 0deg));
+    transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), filter .4s ease;
+  }
+  .intro .hov:hover {
+    transform: translateY(-.06em) rotate(calc(var(--r, 0deg) + var(--t, 5deg))) scale(1.12);
+    filter: drop-shadow(0 .12em .16em rgba(22,23,20,.22));
+  }
+  .intro .stamp.hov:hover { filter: drop-shadow(0 .14em .2em rgba(22,23,20,.32)); }
+  /* click to expand: the same spring, but the image straightens and grows until clicked again */
+  .intro .hov { outline: none; }
+  .intro .hov:focus-visible { outline: 2px solid var(--olive-deep); outline-offset: .12em; }
+  .intro .hov.open, .intro .hov.open:hover {
+    transform: translateY(-.06em) rotate(0deg) scale(3.6);
+    filter: drop-shadow(0 .05em .09em rgba(22,23,20,.3));
+    transition-duration: .65s, .4s;
+    z-index: 5;
+  }
+  .mark { position: relative; white-space: nowrap; }
+  .mark svg { position: absolute; overflow: visible; pointer-events: none; }
+  .mark.under svg { left: -1%; right: -1%; bottom: -.08em; width: 102%; height: .16em; }
+  .mark.circle svg { left: -7%; top: -2%; width: 114%; height: 112%; }
+  .note {
+    position: absolute; right: 6%; top: -1.3em;
+    font: italic 300 clamp(14px, 1.9vw, 24px)/1.2 Fraunces, serif; letter-spacing: 0;
+    color: var(--pink); transform: rotate(-6deg); white-space: nowrap;
+  }
+  /* ---------- pond toolbar ----------
+     Frosted glass bar. A white thumb glides between tools and the active
+     tool's label opens out beside its icon. */
+  .tools {
+    --ease: cubic-bezier(.32, .72, 0, 1);
+    position: absolute; z-index: 3; left: 50%; bottom: 16px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 999px;
+    color: var(--ink); cursor: default;
+    background: rgba(250, 246, 240, .62);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+    box-shadow:
+      inset 0 0 0 .5px rgba(255,255,255,.9), inset 0 1px 0 rgba(255,255,255,.9),
+      0 0 0 .5px rgba(22,23,20,.08), 0 2px 6px rgba(22,23,20,.05), 0 14px 34px -12px rgba(22,23,20,.24);
+  }
+  .tools .thumb {
+    position: absolute; left: 0; top: 5px; height: 38px; width: 38px; border-radius: 999px;
+    background: #fff; pointer-events: none; will-change: transform, width;
+    box-shadow: 0 0 0 .5px rgba(22,23,20,.05), 0 1px 2px rgba(22,23,20,.1), 0 4px 10px -2px rgba(22,23,20,.12);
+  }
+  .tools button {
+    position: relative; z-index: 1;
+    appearance: none; border: 0; background: none; cursor: pointer;
+    height: 38px; min-width: 38px; padding: 0 9px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font: 400 14px/1 Inter, sans-serif; color: var(--ink); white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .25s cubic-bezier(.3, .7, .2, 1), padding .5s var(--ease);
+  }
+  .tools button:active { transform: scale(.9); }
+  .tools button svg { transition: transform .4s cubic-bezier(.34, 1.56, .64, 1); }
+  .tools button:hover:not(.on) svg { transform: scale(1.14); }
+  .tools button span {
+    display: inline-block; max-width: 0; margin-left: 0; opacity: 0; overflow: hidden;
+    transition: max-width .5s var(--ease), margin-left .5s var(--ease), opacity .2s ease;
+  }
+  .tools button.on { padding: 0 14px 0 11px; }
+  .tools button.on span { max-width: var(--w, 110px); margin-left: 8px; opacity: 1; transition-delay: 0s, 0s, .14s; }
+  .tools button:focus-visible { outline: 2px solid var(--olive-deep); outline-offset: 2px; }
+  .tools svg { width: 20px; height: 20px; flex: none; overflow: visible; }
+  .tools button.spin svg { animation: spin .65s cubic-bezier(.32, .72, 0, 1); }
+  @keyframes spin { to { transform: rotate(-360deg); } }
+  .tools .sep { width: 1px; height: 18px; margin: 0 4px; background: rgba(22,23,20,.12); }
+  .pop > svg { animation: pop .55s cubic-bezier(.34, 1.56, .64, 1) both; }
+  /* ducks can be clicked: they say quack */
+  .duck { pointer-events: auto; cursor: pointer; }
+  .duck.say > svg { animation: quack-bob .45s cubic-bezier(.34, 1.56, .64, 1); }
+  @keyframes quack-bob { 40% { transform: scale(1.2); } }
+  .quack {
+    position: absolute; z-index: 2; left: 0; top: 0; pointer-events: none; white-space: nowrap;
+    font: italic 300 20px/1 Fraunces, serif; color: var(--olive-deep);
+    padding: 5px 10px 6px; border-radius: 999px; background: #fff;
+    box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 6px 16px -6px rgba(22,23,20,.2);
+    animation: quack-rise 1.1s cubic-bezier(.32, .72, 0, 1) both;
+  }
+  @keyframes quack-rise {
+    0%   { transform: translate(-50%, -60%) scale(.5); opacity: 0; }
+    22%  { transform: translate(-50%, -150%) scale(1); opacity: 1; }
+    70%  { transform: translate(-50%, -175%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -205%) scale(.96); opacity: 0; }
+  }
+  @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  /* ---------- selected work ---------- */
+  .work { padding: 72px 0 80px; text-align: center; }
+  .eyebrow { font: 300 14px/1.4 Inter, sans-serif; color: var(--olive); }
+  .work h2 { margin: 8px 0 40px; font: 300 28px/1.25 Inter, sans-serif; letter-spacing: -0.03em; }
+  .cards { display: grid; gap: 56px; width: min(436px, 100%); margin-inline: auto; text-align: left; }
+  .cover {
+    aspect-ratio: 436 / 300; border-radius: 20px; display: grid; place-items: center;
+    background: linear-gradient(150deg, #ecece8 10%, #d2d6b9 70%);
+    font: 400 11px/1.4 Inter, sans-serif; letter-spacing: .1em; color: var(--olive-deep);
+    transition: transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .card:hover .cover { transform: translateY(-4px); }
+  /* a cover with a real screenshot: the screen sits on the calm ground and eases closer on hover */
+  .cover.shot { overflow: hidden; padding: 28px 0 0 28px; place-items: stretch; background: linear-gradient(150deg, #ecece8 10%, #d2d6b9 70%); }
+  .cover.shot img, .cover.shot video {
+    width: 100%; height: 100%; object-fit: cover; object-position: 0 0; display: block;
+    border-radius: 10px 0 0 0; box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 14px 30px -12px rgba(22,23,20,.28);
+    transform-origin: 0 0; transition: transform .7s cubic-bezier(.2,.8,.2,1);
+  }
+  .card:hover .cover.shot img, .card:focus-visible .cover.shot img,
+  .card:hover .cover.shot video, .card:focus-visible .cover.shot video { transform: scale(1.06); }
+  .card:focus-visible { outline: 2px solid var(--olive-deep); outline-offset: 8px; border-radius: 20px; }
+  .card h3 { margin: 16px 0 4px; font: 400 20px/1.35 Inter, sans-serif; }
+  .card p { margin: 0 0 14px; font-size: 14px; line-height: 1.5; }
+  .tags { display: flex; gap: 8px; }
+  .tags span { padding: 4px 12px; border-radius: 999px; background: var(--mist); font: 300 14px/1.4 Inter, sans-serif; }
+  .work .pill { margin-top: 48px; padding: 13px 23px; font-size: 14px; }
+
+  footer { border-top: 1px solid var(--mist); }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; height: 102px; font-size: 14px; }
+  footer nav { display: flex; gap: 28px; }
+
+  @media (max-width: 640px) {
+    .nav-links { gap: 18px; }
+    .nav-links a:not(.pill) { display: none; }
+    .pond { border-radius: 26px; }
+    .note { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .cover, .cover.shot img, .cover.shot video, .intro .hov { transition: none; }
+    .pop > svg, .duck.say > svg { animation: none; }
+    .tools button, .tools button span, .tools button svg { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap nav">
+  <a class="brand" href="#" aria-label="jess — home">
+    <svg width="30" height="30" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>
+    jess
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="about.html">(about)</a>
+    <a href="#work">(work)</a>
+    <a href="play.html">(play)</a>
+    <a class="pill" href="#resume"><i></i>Resume</a>
+  </nav>
+</header>
+
+<main>
+  <section class="wrap">
+    <div class="pond" id="pond">
+      <canvas aria-hidden="true"></canvas>
+      <div class="leaves" aria-hidden="true"></div>
+
+      <h1 class="intro">
+        <span class="line">
+          <span>hi! I&rsquo;m</span>
+          <span class="name">jess</span>
+          <span class="chip c-work hov" role="button" tabindex="0" aria-expanded="false" aria-label="Photo of Jess"></span>
+          <span>and I&rsquo;m a</span>
+        </span>
+        <span class="line">
+          <svg class="hov" style="--t: 10deg" width="0.8em" height="0.8em" viewBox="-50 -50 100 100" role="button" tabindex="0" aria-expanded="false" aria-label="Lotus flower"><use href="#bloom"/></svg>
+          <span>design engineer</span>
+          <span>based in</span>
+          <img class="apple hov" src="apple.png" alt="" role="button" tabindex="0" aria-expanded="false" aria-label="Apple">
+          <span>NYC.</span>
+          <span class="stamp hov" role="button" tabindex="0" aria-expanded="false" aria-label="New York taxi stamp"><span class="stamp-paper"><span class="stamp-img"></span></span></span>
+        </span>
+      </h1>
+
+      <div class="tools" role="toolbar" aria-label="Add things to the pond">
+        <i class="thumb" aria-hidden="true"></i>
+        <button type="button" data-tool="select" class="on" aria-pressed="true" aria-label="Select">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 3.2 L15.8 8.6 L10.9 10.6 L8.9 15.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Select</span>
+        </button>
+        <button type="button" data-tool="lily" aria-pressed="false" aria-label="Lily pad">
+          <svg class="lily-icon" viewBox="0 0 128 128" aria-hidden="true"></svg><span>Lily pad</span>
+        </button>
+        <button type="button" data-tool="lotus" aria-pressed="false" aria-label="Lotus flower">
+          <svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#bloom"/></svg><span>Lotus flower</span>
+        </button>
+        <button type="button" data-tool="duck" aria-pressed="false" aria-label="Duck">
+          <svg viewBox="-50 -50 100 100" aria-hidden="true"><use href="#duck"/></svg><span>Duck</span>
+        </button>
+        <i class="sep" aria-hidden="true"></i>
+        <button type="button" data-tool="reset" aria-label="Reset the pond">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.6 10.4a5.5 5.5 0 1 0 1.5-4.2M4.1 3.2v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="work wrap" id="work">
+    <div class="eyebrow">(completed + work in progress)</div>
+    <h2>Some Projects</h2>
+    <div class="cards">
+      <a class="card" href="tangents.html"><div class="cover shot"><video src="tangents/clips/cover.mp4" poster="tangents/clips/cover.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Screen recording of the Tangents desktop map: zooming into a research session, moving along its trail and opening a saved card."></video></div><h3>Tangents</h3><p>A map of your creative research that keeps every detour, built as a working prototype for the UXC NYU Design-a-thon.</p><div class="tags"><span>Product design + prototyping</span><span>2026</span></div></a>
+      <div class="card"><div class="cover">COMING SOON</div><h3>UXPA x NYC</h3><p>Coming soon.</p><div class="tags"><span>Branding</span><span>2026</span></div></div>
+      <a class="card" href="#"><div class="cover">PROJECT COVER</div><h3>Project title</h3><p>One-line summary of the project and its outcome.</p><div class="tags"><span>Role</span><span>2026</span></div></a>
+    </div>
+    <a class="pill" href="#">See all work</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>jess &nbsp;·&nbsp; Design engineer, New York</span>
+    <nav aria-label="Footer"><a href="#">LinkedIn</a><a href="#">Email</a><a href="#resume">Resume</a></nav>
+  </div>
+</footer>
+
+<!-- shared defs: bloom mark + the riso print filter used by every leaf -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Both marks are the Figma components, paths unchanged (drawn on a 120 box, scaled to this page's 100 box).
+         #logo  = Logo mark, "petal to lotus": pale centre, pink edge. Used for the logo only.
+         #bloom = Bloom, "lotus to petal": pink centre, pale edge. Used for every flower in the pond. -->
+    <radialGradient id="logoFill" gradientUnits="userSpaceOnUse" cx="60" cy="60" r="60">
+      <stop stop-color="#FBDCE6"/><stop offset="1" stop-color="#F29BB8"/>
+    </radialGradient>
+    <radialGradient id="bloomFill" gradientUnits="userSpaceOnUse" cx="60" cy="60" r="60">
+      <stop stop-color="#F29BB8"/><stop offset="1" stop-color="#FBDCE6"/>
+    </radialGradient>
+    <g id="logo" transform="translate(-50 -50) scale(.833333)">
+      <path d="M86.4004 0C104.957 0.000212344 120 15.0432 120 33.5996C120 44.3086 114.99 53.8472 107.186 60C114.99 66.1528 120 75.6914 120 86.4004C120 104.957 104.957 120 86.4004 120C75.6914 120 66.1528 114.99 60 107.186C53.8472 114.99 44.3086 120 33.5996 120C15.0432 120 0.000212357 104.957 0 86.4004C0 75.6917 5.00984 66.1528 12.8135 60C5.00984 53.8472 0 44.3083 0 33.5996C0.000210283 15.0432 15.0432 0.000210295 33.5996 0C44.3083 0 53.8472 5.00984 60 12.8135C66.1528 5.00984 75.6917 0 86.4004 0ZM60 54.3848C58.3559 56.4702 56.4702 58.3559 54.3848 60C56.47 61.644 58.356 63.5291 60 65.6143C61.6438 63.5293 63.5293 61.6438 65.6143 60C63.5291 58.356 61.644 56.47 60 54.3848Z" fill-rule="evenodd" clip-rule="evenodd" fill="url(#logoFill)"/>
+      <path d="M60 45.6L63.8693 56.1307L74.4 60L63.8693 63.8693L60 74.4L56.1307 63.8693L45.6 60L56.1307 56.1307L60 45.6Z" fill="#fff"/>
+    </g>
+    <g id="bloom" transform="translate(-50 -50) scale(.833333)">
+      <path d="M86.4004 0C104.957 0.000212344 120 15.0432 120 33.5996C120 44.3086 114.99 53.8472 107.186 60C114.99 66.1528 120 75.6914 120 86.4004C120 104.957 104.957 120 86.4004 120C75.6914 120 66.1528 114.99 60 107.186C53.8472 114.99 44.3086 120 33.5996 120C15.0432 120 0.000212357 104.957 0 86.4004C0 75.6917 5.00984 66.1528 12.8135 60C5.00984 53.8472 0 44.3083 0 33.5996C0.000210283 15.0432 15.0432 0.000210295 33.5996 0C44.3083 0 53.8472 5.00984 60 12.8135C66.1528 5.00984 75.6917 0 86.4004 0ZM60 54.3848C58.3559 56.4702 56.4702 58.3559 54.3848 60C56.47 61.644 58.356 63.5291 60 65.6143C61.6438 63.5293 63.5293 61.6438 65.6143 60C63.5291 58.356 61.644 56.47 60 54.3848Z" fill-rule="evenodd" clip-rule="evenodd" fill="url(#bloomFill)"/>
+      <path d="M60 45.6L63.8693 56.1307L74.4 60L63.8693 63.8693L60 74.4L56.1307 63.8693L45.6 60L56.1307 56.1307L60 45.6Z" fill="#fff"/>
+    </g>
+    <!-- Riso print finish: wobbly edge + paper grain knocked out of the ink (same recipe as the leaves). -->
+    <filter id="riso" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="2" seed="7" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="3.2" xChannelSelector="R" yChannelSelector="G" result="ink"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="2" seed="21" result="grain"/>
+      <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -11 7.4" result="speck"/>
+      <feComposite in="ink" in2="speck" operator="in"/>
+    </filter>
+    <radialGradient id="duckFill" gradientUnits="userSpaceOnUse" cx="0" cy="2" r="44">
+      <stop stop-color="#FFFEF8"/><stop offset="1" stop-color="#F3E7C6"/>
+    </radialGradient>
+    <!-- Duck from above, printed in three inks: a pale blue under-print sitting slightly off-register,
+         a soft cream body, and an orange beak. No outlines. -->
+    <g id="duck" filter="url(#riso)">
+      <g fill="#B5D5EA" transform="translate(2 3)">
+        <path d="M0 50 L-10 34 L10 34 Z"/><ellipse cx="0" cy="10" rx="24" ry="31"/><circle cx="0" cy="-21" r="15.5"/>
+      </g>
+      <g fill="url(#duckFill)">
+        <path d="M0 46 L-8 33 L8 33 Z"/><ellipse cx="0" cy="10" rx="21" ry="28"/><circle cx="0" cy="-21" r="13"/>
+      </g>
+      <path d="M-13 2 Q-17 20 -6 31 Q-9 15 -13 2Z M13 2 Q17 20 6 31 Q9 15 13 2Z" fill="#E3D3A4"/>
+      <path d="M-6.5 -31 Q0 -48 6.5 -31 Q0 -27 -6.5 -31Z" fill="#F29A2E"/>
+      <circle cx="-5.5" cy="-24" r="1.9" fill="#3F4A26"/><circle cx="5.5" cy="-24" r="1.9" fill="#3F4A26"/>
+    </g>
+  </defs>
+</svg>
+
+<script>
+(() => {
+  const pond = document.getElementById('pond');
+  const layer = pond.querySelector('.leaves');
+  const canvas = pond.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Scene authored on a 1200 × 546 frame. [x, y, diameter, tone, slit angle, lobes, extras]
+  const SCENE = [
+    [ 70,  60, 236, 'light', -0.5, 7, {}],
+    [250,  30, 118, 'dark',   2.2, 6, { minor: true }],
+    [ 22, 280,  82, 'light',  1.0, 6, { bloom: [0.95, -0.75, 30], minor: true }],
+    [600,  12,  64, 'light',  2.6, 6, { minor: true }],
+    [1120,  82, 222, 'light', -2.4, 7, { bloom: [0.5, 0.22, 34] }],
+    [962,  26, 112, 'dark',   0.6, 6, { minor: true }],
+    [1188, 262,  96, 'light', 3.6, 6, { minor: true }],
+    [150, 500, 196, 'light',  0.25, 7, {}],
+    [300, 540, 112, 'dark',  -1.9, 6, { minor: true }],
+    [ 24, 396,  84, 'light',  4.2, 6, { minor: true }],
+    [1030, 500, 184, 'dark',  -0.9, 7, { bloom: [0.05, 0.02, 60] }],
+    [1160, 452, 126, 'light', 2.9, 6, { minor: true }],
+    [886, 544,  70, 'light',  1.2, 6, { minor: true }],
+  ];
+
+  const rng = seed => () => { // mulberry32
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+  const f = n => n.toFixed(2);
+  const clamp = (v, a, b) => Math.min(Math.max(v, a), Math.max(a, b));
+
+  /* Leaf outline: soft scalloped disc, a narrow slit running from the rim toward
+     the centre, and a four-point star cut out of the middle. */
+  function leafGeometry(R, c, alpha, lobes, rand) {
+    const amp = 0.11, p1 = rand() * 6.28, p2 = rand() * 6.28;
+    const rim = phi => R * (1 - amp * (1 + Math.cos(lobes * phi)) / 2
+      + 0.012 * Math.sin(2 * phi + p1) + 0.010 * Math.sin(3 * phi + p2));
+    const ca = Math.cos(alpha), sa = Math.sin(alpha);
+    const P = (u, v) => f(c + u * ca - v * sa) + ' ' + f(c + u * sa + v * ca);
+    const polar = (r, phi) => P(r * Math.cos(phi), r * Math.sin(phi));
+
+    const w = Math.max(1.8, R * 0.035), k = R * 0.09, tip = R * 0.2;
+    const start = (w + k) / rim(0);
+    const u0 = rim(start) * Math.cos(start);
+    let d = `M${P(u0 - k, w)} Q${P(u0, w)} ${polar(rim(start), start)}`;
+    const N = 200;
+    for (let i = 1; i <= N; i++) {
+      const phi = start + (2 * Math.PI - 2 * start) * i / N;
+      d += ` L${polar(rim(phi), phi)}`;
+    }
+    d += ` Q${P(u0, -w)} ${P(u0 - k, -w)} L${P(tip, -w)}`
+       + ` C${P(tip - 1.4 * w, -w)} ${P(tip - 1.4 * w, w)} ${P(tip, w)} Z`;
+
+    // star cut-out
+    const s = R * 0.085, C = f(c) + ' ' + f(c), rot = alpha + Math.PI / 4;
+    const sp = i => f(c + s * Math.cos(rot + i * Math.PI / 2)) + ' ' + f(c + s * Math.sin(rot + i * Math.PI / 2));
+    d += ` M${sp(0)} Q${C} ${sp(1)} Q${C} ${sp(2)} Q${C} ${sp(3)} Q${C} ${sp(0)} Z`;
+    return { d, rim, polar };
+  }
+
+  function veins(R, geo, rand) {
+    const n = Math.min(20, Math.round(11 + R / 12));
+    let main = '', fine = '';
+    for (let i = 0; i < n; i++) {
+      const phi = (i + 0.5 + (rand() - 0.5) * 0.35) / n * 2 * Math.PI;
+      if (Math.min(phi, 2 * Math.PI - phi) < 0.16) continue;      // keep the slit clear
+      const r0 = R * 0.13, bend = (rand() - 0.5) * 0.14;
+      const fork = R > 34 && rand() < 0.72;
+      if (!fork) {
+        const end = geo.rim(phi) * 0.93;
+        main += `M${geo.polar(r0, phi)} Q${geo.polar((r0 + end) / 2, phi + bend)} ${geo.polar(end, phi)}`;
+        continue;
+      }
+      const rf = R * (0.48 + rand() * 0.16), spread = Math.PI / n * (0.42 + rand() * 0.2);
+      main += `M${geo.polar(r0, phi)} Q${geo.polar((r0 + rf) / 2, phi + bend)} ${geo.polar(rf, phi)}`;
+      for (const sgn of [-1, 1]) {
+        const pe = phi + sgn * spread, end = geo.rim(pe) * 0.93;
+        fine += `M${geo.polar(rf, phi)} Q${geo.polar((rf + end) / 2, phi + sgn * spread * 0.35)} ${geo.polar(end, pe)}`;
+      }
+    }
+    return { main, fine };
+  }
+
+  // Two inks: a pale olive and a deep olive. Veins are the other ink.
+  const TONES = {
+    light: { fill: [[0, '#d6deb4'], [.6, '#bfcb93'], [1, '#a9b77b']], vein: '#75854a', shade: '#8b9a5c' },
+    dark:  { fill: [[0, '#7f9155'], [.6, '#60723d'], [1, '#4b5b2f']], vein: '#d3ddb0', shade: '#35441f' },
+  };
+
+  /* Riso-style leaf: flat ink, wobbly hand-cut edge, paper grain knocked out of
+     the ink, and veins printed slightly off-register. No blur, shadow or gloss. */
+  function leafMarkup(i, R, S, tone, alpha, lobes) {
+    const rand = rng(i * 7919 + 13), c = S / 2, T = TONES[tone];
+    const geo = leafGeometry(R, c, alpha, lobes, rand);
+    const v = veins(R, geo, rand);
+    const id = n => `${n}${i}`;
+    const stops = T.fill.map(([o, col]) => `<stop offset="${o}" stop-color="${col}"/>`).join('');
+    const ba = rand() * 6.28, bx = c + Math.cos(ba) * R * .5, by = c + Math.sin(ba) * R * .5;
+    const sw = Math.max(1, R / 80), wob = Math.max(2.5, R * .05);
+    return `<svg width="${S}" height="${S}"><defs>
+        <radialGradient id="${id('g')}" gradientUnits="userSpaceOnUse" cx="${c}" cy="${c}" r="${R}">${stops}</radialGradient>
+        <radialGradient id="${id('s')}"><stop offset="0" stop-color="${T.shade}" stop-opacity=".75"/><stop offset="1" stop-color="${T.shade}" stop-opacity="0"/></radialGradient>
+        <clipPath id="${id('c')}"><path d="${geo.d}" clip-rule="evenodd"/></clipPath>
+        <filter id="${id('p')}" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="${f(Math.min(.09, 2.4 / R))}" numOctaves="2" seed="${i + 3}" result="warp"/>
+          <feDisplacementMap in="SourceGraphic" in2="warp" scale="${f(wob)}" xChannelSelector="R" yChannelSelector="G" result="ink"/>
+          <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="${i + 40}" result="grain"/>
+          <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -11 7.3" result="speck"/>
+          <feComposite in="ink" in2="speck" operator="in"/>
+        </filter>
+      </defs>
+      <g filter="url(#${id('p')})">
+        <path d="${geo.d}" fill-rule="evenodd" fill="url(#${id('g')})"/>
+        <g clip-path="url(#${id('c')})">
+          <ellipse cx="${f(bx)}" cy="${f(by)}" rx="${f(R * .62)}" ry="${f(R * .46)}" transform="rotate(${f(ba * 57.3 + 90)} ${f(bx)} ${f(by)})" fill="url(#${id('s')})"/>
+          <g fill="none" stroke="${T.vein}" stroke-linecap="round" transform="translate(${f(sw * .9)} ${f(sw * .6)})">
+            <path d="${v.main}" stroke-width="${f(sw * 1.3)}"/><path d="${v.fine}" stroke-width="${f(sw * .9)}"/>
+          </g>
+        </g>
+      </g></svg>`;
+  }
+
+  let leaves = [], W = 0, H = 0, dpr = 1, scale = 1;
+
+  // A floating body: rests at (hx, hy) and eases toward an offset and a small turn.
+  const body = (el, R, half, hx, hy, i) => ({
+    el, R, half, hx, hy, ox: 0, oy: 0, sx: 0, sy: 0, a: 0, sa: 0,
+    m: .7 + R / 70, ph: i * 1.7, sp: .35 + (i % 5) * .06,
+  });
+
+  function build() {
+    const rect = pond.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, W * dpr); canvas.height = Math.max(1, H * dpr);
+    measureWalls();
+    const small = W < 700, s = scale = Math.max(W / 1200, small ? 0.46 : 0.52);
+    layer.innerHTML = '';
+    leaves = [];
+    const blooms = [];
+    SCENE.forEach(([x, y, dia, tone, alpha, lobes, o], i) => {
+      if (small && o.minor) return;
+      const R = dia * s / 2, S = Math.ceil(2 * R + 4);
+      const el = document.createElement('div');
+      el.className = 'leaf';
+      el.innerHTML = leafMarkup(i, R, S, tone, alpha, lobes);
+      layer.appendChild(el);
+      const hx = x / 1200 * W, hy = y / 546 * H;   // leaves may sit past the edge and get cropped
+      const pad = body(el, R, S / 2, hx, hy, i); pad.lily = true;
+      leaves.push(pad);
+      if (o.bloom) {            // blooms float on their own, above the ink layer so they stay clean pink
+        const [bx, by, bs] = o.bloom, size = bs * s;
+        const b = document.createElement('div');
+        b.className = 'bloom';
+        b.innerHTML = `<svg width="${f(size)}" height="${f(size)}" viewBox="-50 -50 100 100" style="display:block"><use href="#bloom"/></svg>`;
+        blooms.push(body(b, size / 2, size / 2, hx + bx * R, hy + by * R, i + 20));
+      }
+    });
+    blooms.forEach(b => { layer.appendChild(b.el); leaves.push(b); });
+    added.forEach(createItem);                 // things the visitor placed survive a resize
+    place(0);
+  }
+
+  function place(t) {
+    for (const L of leaves) {
+      const bob = reduced ? 0 : 1;
+      const x = L.hx + L.ox + Math.sin(t * .0006 * L.sp * 2 + L.ph) * 3 * bob;
+      const y = L.hy + L.oy + Math.cos(t * .0005 * L.sp * 2 + L.ph * 1.3) * 4 * bob;
+      const rot = Math.sin(t * .0004 * L.sp * 2 + L.ph) * 2 * bob + L.a + (L.rot0 || 0);
+      L.el.style.transform = `translate3d(${f(x - L.half)}px,${f(y - L.half)}px,0) rotate(${f(rot)}deg)`;
+    }
+  }
+
+  /* ---------- the sentence is solid ----------
+     Each line of text is a wall. Anything floating that touches one is pushed
+     back out along the shortest way, so it rests against the text and slides
+     around it instead of drifting over the words. */
+  const WALL_PAD = 8;
+  let walls = [];
+  function measureWalls() {
+    const pr = pond.getBoundingClientRect();
+    walls = [...pond.querySelectorAll('.intro .line')].map(l => {
+      const r = l.getBoundingClientRect();
+      return { x0: r.left - pr.left - WALL_PAD, y0: r.top - pr.top - WALL_PAD, x1: r.right - pr.left + WALL_PAD, y1: r.bottom - pr.top + WALL_PAD };
+    });
+  }
+  function pushOut(px, py, r) {                 // how far a circle at (px, py) must move to clear every wall
+    let ox = 0, oy = 0;
+    for (const w of walls) {
+      const x = px + ox, y = py + oy;
+      const cx = clamp(x, w.x0, w.x1), cy = clamp(y, w.y0, w.y1);
+      const dx = x - cx, dy = y - cy, d2 = dx * dx + dy * dy;
+      if (d2 >= r * r) continue;
+      if (d2 > 1e-6) { const d = Math.sqrt(d2), pen = r - d; ox += dx / d * pen; oy += dy / d * pen; }
+      else {                                     // centre is inside the wall: leave through the nearest side
+        const l = x - w.x0, rt = w.x1 - x, tp = y - w.y0, bt = w.y1 - y, m = Math.min(l, rt, tp, bt);
+        if (m === l) ox -= l + r; else if (m === rt) ox += rt + r; else if (m === tp) oy -= tp + r; else oy += bt + r;
+      }
+    }
+    return [ox, oy];
+  }
+  const hitRadius = L => L.R * (L.duck ? .6 : .92);
+
+  /* ---------- cursor ---------- */
+  const mouse = { x: 0, y: 0, vx: 0, vy: 0, inside: false };
+
+  /* ---------- ripples ----------
+     A ripple is three thin, broken light-blue rings that widen and fade. One appears wherever the visitor clicks. */
+  const RIPPLE_LIFE = 2200;    // ms one ripple lasts
+  let ripples = [];
+  const ripple = (x, y, t, size) => ripples.push({ x, y, t, size, spin: Math.random() * 6.28 });
+
+  function drawRipples(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ripples = ripples.filter(r => t - r.t < RIPPLE_LIFE);
+    ctx.lineCap = 'round';
+    for (const r of ripples) {
+      const age = (t - r.t) / RIPPLE_LIFE;
+      if (age < 0) continue;                                 // staggered ones wait their turn
+      for (let k = 0; k < 3; k++) {                          // three broken rings, one inside the next
+        const rad = age * r.size - k * r.size * .16;
+        if (rad <= 1) continue;
+        const a = Math.pow(1 - age, 1.4) * (1 - k * .26);
+        ctx.strokeStyle = `rgba(134,190,228,${a})`; ctx.lineWidth = 2 - k * .4;
+        for (let s = 0; s < 3; s++) {                        // three arcs with gaps at fixed angles, so nothing turns
+          const from = r.spin + k * .9 + s * 2.0944;
+          ctx.beginPath(); ctx.arc(r.x, r.y, rad, from, from + 1.72); ctx.stroke();
+        }
+      }
+    }
+  }
+  /* Lily pads may overlap, but only a little: no deeper than a quarter of the
+     smaller pad's width. Past that they ease apart. Your original pads hold
+     their ground against a visitor's; two of the same kind share the move. */
+  const MAX_OVERLAP = .25;
+  function separatePads() {
+    const pads = leaves.filter(L => L.lily);
+    const nudge = (L, x, y, own) => {
+      if (own) { L.hx += x; L.hy += y; if (L.gx != null) { L.gx += x; L.gy += y; } }
+      else { L.ox += x; L.oy += y; L.sx += x; L.sy += y; }
+    };
+    for (let i = 0; i < pads.length; i++) for (let j = i + 1; j < pads.length; j++) {
+      const A = pads[i], B = pads[j];
+      let dx = A.hx + A.ox - B.hx - B.ox, dy = A.hy + A.oy - B.hy - B.oy;
+      const min = A.R + B.R - 2 * MAX_OVERLAP * Math.min(A.R, B.R), d = Math.hypot(dx, dy);
+      if (d >= min) continue;
+      if (d < .01) { dx = 1; dy = 0; } else { dx /= d; dy /= d; }
+      const pen = (min - d) * .5;                    // half each frame, so they ease apart
+      const wa = A.user ? 1 : 0, wb = B.user ? 1 : 0;
+      if (wa + wb === 0) { nudge(A, dx * pen / 2, dy * pen / 2); nudge(B, -dx * pen / 2, -dy * pen / 2); }
+      else { nudge(A, dx * pen * wa / (wa + wb), dy * pen * wa / (wa + wb), true); nudge(B, -dx * pen * wb / (wa + wb), -dy * pen * wb / (wa + wb), true); }
+    }
+  }
+
+  function frame(t) {
+
+    /* The cursor moves through the pond like a small boat: everything nearby parts
+       to let it through, gets carried a little by its wake, turns slightly, then
+       floats slowly back to where it was. */
+    const sp = Math.hypot(mouse.vx, mouse.vy), cap = sp > 26 ? 26 / sp : 1;
+    const wx = mouse.vx * cap, wy = mouse.vy * cap;
+    for (const L of leaves) {
+      if (L.gx != null && !reduced) { L.hx += (L.gx - L.hx) * .012; L.hy += (L.gy - L.hy) * .012; }   // drifting to the bank
+      else if (L.gx != null) { L.hx = L.gx; L.hy = L.gy; }
+      let tx = 0, ty = 0, ta = 0, rate = .028;
+      if (mouse.inside && !reduced && !L.duck) {     // ducks ignore the cursor and just keep paddling
+        const dx = L.hx + L.ox - mouse.x, dy = L.hy + L.oy - mouse.y;
+        const dist = Math.hypot(dx, dy) || 1, range = L.R + 170;
+        if (dist < range) {
+          const u = 1 - dist / range, q = u * u * (3 - 2 * u);     // smooth falloff, no hard edge
+          const nx = dx / dist, ny = dy / dist, reach = 42 / Math.sqrt(L.m);
+          tx = nx * q * reach + wx * q * .8;
+          ty = ny * q * reach + wy * q * .8;
+          ta = clamp((nx * wy - ny * wx) * q * .5, -10, 10);
+          rate = .028 + .04 * q;
+        }
+      }
+      // two eased stages: glides in and out with no overshoot
+      L.sx += (tx - L.sx) * rate; L.sy += (ty - L.sy) * rate; L.sa += (ta - L.sa) * rate;
+      L.ox += (L.sx - L.ox) * .09; L.oy += (L.sy - L.oy) * .09; L.a += (L.sa - L.a) * .09;
+      const [bx, by] = pushOut(L.hx + L.ox, L.hy + L.oy, hitRadius(L));
+      if (bx || by) {
+        if (L.duck) { L.hx += bx; L.hy += by; L.bump = Math.atan2(bx, -by) * 180 / Math.PI; }   // ducks turn away
+        else { L.ox += bx; L.oy += by; L.sx += bx; L.sy += by; }
+      }
+    }
+    separatePads();
+    mouse.vx *= .86; mouse.vy *= .86;
+    place(t);
+    swimDucks(t);
+    drawRipples(t);
+    raf = visible ? requestAnimationFrame(frame) : 0;
+  }
+
+  pond.addEventListener('pointermove', e => {
+    const r = pond.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (mouse.inside) { mouse.vx += (x - mouse.x - mouse.vx) * .5; mouse.vy += (y - mouse.y - mouse.vy) * .5; }
+    mouse.x = x; mouse.y = y; mouse.inside = true;
+  });
+  /* ---------- toolbar: place lily pads, lotus flowers and ducks ---------- */
+  let tool = 'select', added = [], nextId = 100;
+  const MAX_ADDED = 40;
+
+  function createItem(spec) {
+    const el = document.createElement('div');
+    const x = spec.fx * W, y = spec.fy * H;
+    let b;
+    if (spec.type === 'lily') {
+      const R = spec.dia * scale / 2, S = Math.ceil(2 * R + 4);
+      el.className = 'leaf pop';
+      el.innerHTML = leafMarkup(spec.id, R, S, spec.tone, spec.alpha, spec.lobes);
+      b = body(el, R, S / 2, x, y, spec.id); b.lily = true;
+    } else {
+      const size = (spec.type === 'duck' ? 80 : spec.size) * scale;
+      el.className = 'bloom pop';
+      el.innerHTML = `<svg width="${f(size)}" height="${f(size)}" viewBox="-50 -50 100 100" style="display:block"><use href="#${spec.type === 'duck' ? 'duck' : 'bloom'}"/></svg>`;
+      b = body(el, size / 2, size / 2, x, y, spec.id);
+      if (spec.type === 'duck') {
+        b.duck = true; b.rot0 = spec.rot; b.m = .9;
+        el.classList.add('duck');
+        el.addEventListener('click', e => { e.stopPropagation(); quack(el); });   // no ripple, no placing: just a quack
+      } else b.flower = true;
+    }
+    b.user = true; b.spec = spec;
+    for (let k = 0; k < 4; k++) { const [dx, dy] = pushOut(b.hx, b.hy, hitRadius(b)); b.hx += dx; b.hy += dy; }   // never rest on the text
+    layer.appendChild(el);
+    leaves.push(b);
+    return b;
+  }
+
+  function quack(duckEl) {
+    const pr = pond.getBoundingClientRect(), r = duckEl.getBoundingClientRect();
+    const say = document.createElement('div');
+    say.className = 'quack'; say.textContent = 'quack!';
+    say.style.left = f(r.left + r.width / 2 - pr.left) + 'px';
+    say.style.top = f(r.top + r.height / 2 - pr.top) + 'px';
+    say.addEventListener('animationend', () => say.remove());
+    pond.appendChild(say);
+    duckEl.classList.remove('say'); void duckEl.offsetWidth; duckEl.classList.add('say');
+  }
+
+  function addItem(type, x, y) {
+    const spec = { type, id: nextId++, fx: x / W, fy: y / H };
+    if (type === 'lily') Object.assign(spec, {
+      dia: 80 + Math.random() * 70, tone: Math.random() < .3 ? 'dark' : 'light',
+      alpha: Math.random() * 6.28, lobes: Math.random() < .5 ? 6 : 7,
+    });
+    if (type === 'lotus') spec.size = 30 + Math.random() * 18;
+    if (type === 'duck') spec.rot = Math.random() * 360;
+    added.push(spec);
+    const b = createItem(spec);
+    if (type === 'lily' || type === 'lotus') {   // new pads and flowers drift off to the nearest bank; pads settle half out of frame
+      const R = b.R, toL = b.hx, toR = W - b.hx, toT = b.hy, toB = H - b.hy, m = Math.min(toL, toR, toT, toB);
+      const inset = type === 'lily' ? R * (.15 + Math.random() * .5) : R + 8 + Math.random() * 16, slide = (Math.random() - .5) * 90;
+      b.gx = m === toL ? inset : m === toR ? W - inset : clamp(b.hx + slide, R, W - R);
+      b.gy = m === toT ? inset : m === toB ? H - inset : clamp(b.hy + slide, R, H - R);
+      spec.fx = b.gx / W; spec.fy = b.gy / H;    // after a resize it is simply at the bank
+    }
+    if (added.length > MAX_ADDED) {               // keep the pond light: the oldest addition leaves
+      added.shift();
+      const i = leaves.findIndex(L => L.user);
+      if (i >= 0) { leaves[i].el.remove(); leaves.splice(i, 1); }
+    }
+  }
+
+  function clearAdded() {
+    added = [];
+    leaves = leaves.filter(L => { if (L.user) L.el.remove(); return !L.user; });
+  }
+
+  function swimDucks(t) {                         // ducks paddle slowly and turn back before the bank
+    if (reduced) return;
+    for (const L of leaves) {
+      if (!L.duck) continue;
+      const th = L.rot0 * Math.PI / 180;
+      L.hx += Math.sin(th) * .14; L.hy -= Math.cos(th) * .14;
+      let turn = Math.sin(t * .0004 + L.ph) * .12;
+      const m = 46;
+      if (L.hx < m || L.hx > W - m || L.hy < m || L.hy > H - m) {
+        const want = Math.atan2(W / 2 - L.hx, L.hy - H / 2) * 180 / Math.PI;
+        turn = (((want - L.rot0) % 360 + 540) % 360 - 180) * .02;
+      }
+      if (L.bump != null) { turn = (((L.bump - L.rot0) % 360 + 540) % 360 - 180) * .07; L.bump = null; }
+      L.rot0 += turn;
+    }
+  }
+
+  // While an add tool is active the cursor is a small plus with the thing it will place.
+  const PETALS = 'M86.4 0C104.96 0 120 15.04 120 33.6C120 44.3 115 53.85 107.19 60C115 66.15 120 75.7 120 86.4C120 104.96 104.96 120 86.4 120C75.7 120 66.15 115 60 107.19C53.85 115 44.3 120 33.6 120C15.04 120 0 104.96 0 86.4C0 75.7 5 66.15 12.81 60C5 53.85 0 44.3 0 33.6C0 15.04 15.04 0 33.6 0C44.3 0 53.85 5 60 12.81C66.15 5 75.7 0 86.4 0Z';
+  const cursorWith = art => `url("data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'>` +
+    `<path d='M9 3v12M3 9h12' stroke='#fff' stroke-width='4.5' stroke-linecap='round'/>` +
+    `<path d='M9 3v12M3 9h12' stroke='#161714' stroke-width='1.8' stroke-linecap='round'/>${art}</svg>`)}") 9 9, copy`;
+  // The lily pad icon is a real pad: same scalloped outline, slit and veins as the ones in the pond.
+  const LILY_ART = (() => {
+    const geo = leafGeometry(60, 64, -0.6, 7, rng(5)), v = veins(60, geo, rng(11));
+    return `<path d='${geo.d}' fill-rule='evenodd' fill='#b9c68b'/>` +
+      `<path d='${v.main}' fill='none' stroke='#6f7f43' stroke-width='3.2' stroke-linecap='round'/>` +
+      `<path d='${v.fine}' fill='none' stroke='#6f7f43' stroke-width='2.2' stroke-linecap='round'/>`;
+  })();
+  pond.querySelector('.lily-icon').innerHTML = LILY_ART;
+  const CURSORS = {
+    lily: cursorWith(`<g transform='translate(15 15) scale(.21)'>${LILY_ART}</g>`),
+    lotus: cursorWith(`<defs><radialGradient id='g'><stop stop-color='#F29BB8'/><stop offset='1' stop-color='#FBDCE6'/></radialGradient></defs>` +
+      `<g transform='translate(17 17) scale(.2)'><path d='${PETALS}' fill='url(#g)' stroke='#EC8FAE' stroke-width='5'/><path d='M60 45.6L63.9 56.1L74.4 60L63.9 63.9L60 74.4L56.1 63.9L45.6 60L56.1 56.1Z' fill='#fff'/></g>`),
+    duck: cursorWith(`<g transform='translate(29 29) scale(.27)'><g fill='#B5D5EA' transform='translate(2 3)'><path d='M0 50 L-10 34 L10 34 Z'/><ellipse cx='0' cy='10' rx='24' ry='31'/><circle cx='0' cy='-21' r='15.5'/></g>` +
+      `<g fill='#FFFBEC'><path d='M0 46 L-8 33 L8 33 Z'/><ellipse cx='0' cy='10' rx='21' ry='28'/><circle cx='0' cy='-21' r='13'/></g>` +
+      `<path d='M-6.5 -31 Q0 -48 6.5 -31 Q0 -27 -6.5 -31Z' fill='#F29A2E'/><circle cx='-5.5' cy='-24' r='2' fill='#3F4A26'/><circle cx='5.5' cy='-24' r='2' fill='#3F4A26'/></g>`),
+  };
+
+  const toolbar = pond.querySelector('.tools');
+  toolbar.addEventListener('click', e => {
+    e.stopPropagation();
+    let btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.dataset.tool === 'reset') {              // back to how the pond started: nothing added, Select tool
+      clearAdded();
+      btn.classList.remove('spin'); void btn.offsetWidth; btn.classList.add('spin');
+      btn = toolbar.querySelector('[data-tool=select]');
+    }
+    tool = btn.dataset.tool;
+    pond.style.cursor = CURSORS[tool] || '';
+    toolbar.querySelectorAll('button[aria-pressed]').forEach(b => {
+      b.classList.toggle('on', b === btn); b.setAttribute('aria-pressed', b === btn);
+    });
+    glideThumb();
+  });
+
+  // The white thumb eases toward the active button every frame, so it slides
+  // across and resizes while the labels open and close around it.
+  const thumb = toolbar.querySelector('.thumb');
+  let thumbX = 0, thumbW = 38, thumbRaf = 0, thumbUntil = 0;
+  function glideThumb(snap) {
+    const step = now => {
+      const b = toolbar.querySelector('button.on');
+      const k = snap || reduced ? 1 : .2;
+      thumbX += (b.offsetLeft - thumbX) * k; thumbW += (b.offsetWidth - thumbW) * k;
+      thumb.style.transform = `translateX(${f(thumbX)}px)`; thumb.style.width = f(thumbW) + 'px';
+      thumbRaf = !snap && now < thumbUntil ? requestAnimationFrame(step) : 0;
+    };
+    thumbUntil = performance.now() + 900;
+    if (snap) step(0); else if (!thumbRaf) thumbRaf = requestAnimationFrame(step);
+  }
+  function fitLabels() {                           // each label opens to exactly its own width
+    toolbar.querySelectorAll('button span').forEach(s => s.style.setProperty('--w', Math.ceil(s.scrollWidth) + 1 + 'px'));
+    glideThumb(true);
+  }
+  fitLabels();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitLabels(); measureWalls(); });
+
+  pond.addEventListener('click', e => {          // Select: a ripple. Any other tool: place one there, with a small splash
+    const r = pond.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (tool === 'select') return ripple(x, y, performance.now(), 150);
+    addItem(tool, x, y);
+    ripple(x, y, performance.now(), 90);
+  });
+  pond.addEventListener('pointerleave', () => { mouse.inside = false; });
+
+  let raf = 0, visible = true, lastW = 0, timer;
+  new IntersectionObserver(([en]) => {
+    visible = en.isIntersecting;
+    if (visible && !raf) raf = requestAnimationFrame(frame);
+  }).observe(pond);
+  new ResizeObserver(() => {
+    const w = pond.clientWidth;
+    if (w === lastW) return;
+    lastW = w; clearTimeout(timer); timer = setTimeout(build, 120);
+  }).observe(pond);
+
+  lastW = pond.clientWidth;
+  build();
+
+  /* ---------- project cover clips: play only while on screen, and not at all for reduced motion ---------- */
+  document.querySelectorAll('.cover video').forEach(v => {
+    if (reduced) { v.removeAttribute('autoplay'); v.pause(); return; }
+    new IntersectionObserver(([en]) => { en.isIntersecting ? v.play().catch(() => {}) : v.pause(); }, { threshold: .25 }).observe(v);
+  });
+
+  /* ---------- inline images: click to expand ---------- */
+  const zoomables = [...document.querySelectorAll('.intro .hov')];
+  const closeAll = except => zoomables.forEach(el => { if (el !== except) { el.classList.remove('open'); el.setAttribute('aria-expanded', 'false'); } });
+  zoomables.forEach(el => {
+    const toggle = () => { closeAll(el); el.setAttribute('aria-expanded', el.classList.toggle('open')); };
+    el.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  });
+  document.addEventListener('click', () => closeAll());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+
+})();
+</script>
+</body>
+</html>

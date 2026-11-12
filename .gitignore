@@ -1,0 +1,7 @@
+# This folder also holds unrelated files, so ignore everything and list the site files to keep.
+/*
+!/.gitignore
+!/README.md
+!/index.html
+!/tangents.html
+!/tangents/
