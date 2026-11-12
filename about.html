@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About — jess</title>
+<meta name="description" content="About Jess, a design engineer based in New York.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* tokens from the Figma file */
+    --ink: #161714;
+    --off-white: #fafafa;
+    --mist: #efefef;
+    --olive: #7a8450;
+    --olive-deep: #3f4a26;
+    --pink: #f29bb8;
+    --muted: #5d5f58;
+
+    --content: 1120px;
+    --gutter: 24px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--off-white);
+    color: var(--ink);
+    font: 400 16px/1.55 Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(var(--content), 100% - 2 * var(--gutter)); margin-inline: auto; }
+  :focus-visible { outline: 2px solid var(--olive-deep); outline-offset: 3px; border-radius: 4px; }
+
+  /* ---------- nav (same as home) ---------- */
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 97px; }
+  .brand { display: flex; align-items: center; gap: 10px; font: italic 300 30px/1 Fraunces, serif; }
+  .nav-links { display: flex; align-items: center; gap: 36px; font: 300 14px/1.4 Inter, sans-serif; }
+  .nav-links a:not(.pill):hover, .nav-links a[aria-current] { color: var(--olive); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 18px; border-radius: 999px; background: #fff;
+    font: 400 14px/1.4 Inter, sans-serif; box-shadow: 0 1px 2px rgba(22,23,20,.06), 0 6px 18px rgba(22,23,20,.05);
+  }
+  .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); }
+
+  /* ---------- about: photo on the left, words on the right ---------- */
+  .about { padding: 24px 0 88px; }
+  .sheet {
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: start;
+    padding: 64px 72px 72px; border-radius: 24px; background: #f4f3ef;      /* same flat paper as the pond */
+  }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* the photo is a print taped to the page, with a couple of stickers on it */
+  .portrait { position: relative; margin: 0; rotate: -2deg; transition: rotate .5s cubic-bezier(.34, 1.56, .64, 1); }
+  .portrait:hover { rotate: 0deg; }
+  .portrait .photo {
+    display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 0;
+    border: 10px solid #fff; border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 18px 34px -14px rgba(22,23,20,.28);
+  }
+  .portrait .bloom { position: absolute; left: -30px; bottom: -26px; width: 92px; height: 92px; rotate: -10deg; }
+  .portrait .star { position: absolute; right: -22px; top: 34px; rotate: 12deg; }
+
+  .lede { margin: 0 0 16px; font: 300 clamp(18px, 1.9vw, 22px)/1.45 Inter, sans-serif; letter-spacing: -0.01em; text-wrap: pretty; }
+  .bio p:not(.lede) { margin: 0 0 16px; color: var(--muted); text-wrap: pretty; }
+
+  /* experience */
+  .eyebrow { font: 300 14px/1.4 Inter, sans-serif; color: var(--olive); }
+  .history { margin-top: 40px; }
+  .history ol { list-style: none; margin: 0; padding: 0; }
+  .history li {
+    display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 4px 24px;
+    padding: 14px 0; border-top: 1px solid rgba(22,23,20,.12);
+  }
+  .history li:last-child { border-bottom: 1px solid rgba(22,23,20,.12); }
+  .history time { font: 300 14px/1.7 Inter, sans-serif; color: var(--muted); white-space: nowrap; }
+  .history h3 { margin: 0; font: 500 16px/1.5 Inter, sans-serif; }
+  .history h3 span { font-weight: 300; color: var(--muted); }
+  .history h3 span::before { content: "·"; margin: 0 8px; }
+  .history p { margin: 4px 0 0; font-size: 14px; line-height: 1.55; color: var(--muted); text-wrap: pretty; }
+
+  .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .links .pill { padding: 10px 18px; transition: transform .25s ease, box-shadow .25s ease; }
+  .links .pill:hover { transform: translateY(-1px); box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 10px 22px rgba(22,23,20,.09); }
+
+  footer { border-top: 1px solid var(--mist); }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; height: 102px; font-size: 14px; }
+  footer nav { display: flex; gap: 28px; }
+
+  @media (max-width: 900px) {
+    .sheet { gap: 48px; padding: 48px 40px 56px; }
+  }
+  @media (max-width: 720px) {
+    .sheet { grid-template-columns: 1fr; gap: 40px; }
+    .portrait { width: min(320px, 100%); }
+  }
+  @media (max-width: 640px) {
+    :root { --gutter: 20px; }
+    .nav-links { gap: 18px; }
+    .nav-links a:not(.pill) { display: none; }
+    .about { padding: 8px 0 48px; }
+    .sheet { padding: 32px 24px 40px; border-radius: 20px; }
+    .portrait { width: calc(100% - 24px); margin-inline: auto; }
+    .portrait .bloom { left: -22px; bottom: -22px; width: 72px; height: 72px; }
+    .portrait .star { right: -16px; }
+    .history li { grid-template-columns: 1fr; }
+    .links { gap: 8px; }
+    footer .wrap { flex-direction: column-reverse; align-items: flex-start; gap: 12px; height: auto; padding: 28px 0; }
+    footer nav { flex-direction: column; gap: 12px; font-size: 15px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .portrait, .links .pill { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap nav">
+  <a class="brand" href="index.html" aria-label="jess — home">
+    <svg width="30" height="30" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#logo"/></svg>
+    jess
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="about.html" aria-current="page">(about)</a>
+    <a href="index.html#work">(work)</a>
+    <a href="play.html">(play)</a>
+    <a class="pill" href="index.html#resume"><i></i>Resume</a>
+  </nav>
+</header>
+
+<main>
+  <section class="about wrap">
+    <div class="sheet">
+      <h1 class="sr-only">About</h1>
+
+      <figure class="portrait">
+        <img class="photo" src="about/portrait.jpg" alt="Jess sitting at a café counter with a coffee">
+        <svg class="bloom" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#bloom"/></svg>
+        <img class="star" src="about/star.svg" alt="">
+      </figure>
+
+      <div class="bio">
+        <p class="lede">Currently a senior at NYU studying Integrated Design and Media.</p>
+        <p>Hi! My name is Jess and outside of design I love trying new restaurants, getting lost in new countries, and going to concerts. I&rsquo;m originally from Texas and occasionally tell people that I rode horses to school (which is a lie) but my love for big cities brought me to NYC for school today.</p>
+
+        <section class="history" aria-label="Experience">
+          <ol>
+            <li>
+              <time>Sep 2026 – now</time>
+              <div><h3>AStudio <span>UXPA x NYC Mentee</span></h3></div>
+            </li>
+            <li>
+              <time>Jun – Aug 2026</time>
+              <div><h3>Goldman Sachs <span>UX Design Intern</span></h3></div>
+            </li>
+            <li>
+              <time>Jun – Aug 2025</time>
+              <div><h3>NextBestFit <span>UX/UI and Product Design Intern</span></h3></div>
+            </li>
+            <li>
+              <time>May – Aug 2025</time>
+              <div><h3>Extern / Beats by Dre <span>Data Analytics Extern</span></h3></div>
+            </li>
+            <li>
+              <time>Expected 2027</time>
+              <div><h3>New York University <span>B.S. Integrated Design and Media</span></h3></div>
+            </li>
+          </ol>
+        </section>
+
+        <div class="links">
+          <a class="pill" href="index.html#resume"><i></i>Resume</a>
+          <a class="pill" href="#">LinkedIn</a>
+          <a class="pill" href="#">Email</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>jess &nbsp;·&nbsp; Design engineer, New York</span>
+    <nav aria-label="Footer"><a href="#">LinkedIn</a><a href="#">Email</a><a href="index.html#resume">Resume</a></nav>
+  </div>
+</footer>
+
+<!-- shared defs: the Figma logo mark and bloom, paths unchanged (same as the home page) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="logoFill" gradientUnits="userSpaceOnUse" cx="60" cy="60" r="60">
+      <stop stop-color="#FBDCE6"/><stop offset="1" stop-color="#F29BB8"/>
+    </radialGradient>
+    <radialGradient id="bloomFill" gradientUnits="userSpaceOnUse" cx="60" cy="60" r="60">
+      <stop stop-color="#F29BB8"/><stop offset="1" stop-color="#FBDCE6"/>
+    </radialGradient>
+    <g id="logo" transform="translate(-50 -50) scale(.833333)">
+      <path d="M86.4004 0C104.957 0.000212344 120 15.0432 120 33.5996C120 44.3086 114.99 53.8472 107.186 60C114.99 66.1528 120 75.6914 120 86.4004C120 104.957 104.957 120 86.4004 120C75.6914 120 66.1528 114.99 60 107.186C53.8472 114.99 44.3086 120 33.5996 120C15.0432 120 0.000212357 104.957 0 86.4004C0 75.6917 5.00984 66.1528 12.8135 60C5.00984 53.8472 0 44.3083 0 33.5996C0.000210283 15.0432 15.0432 0.000210295 33.5996 0C44.3083 0 53.8472 5.00984 60 12.8135C66.1528 5.00984 75.6917 0 86.4004 0ZM60 54.3848C58.3559 56.4702 56.4702 58.3559 54.3848 60C56.47 61.644 58.356 63.5291 60 65.6143C61.6438 63.5293 63.5293 61.6438 65.6143 60C63.5291 58.356 61.644 56.47 60 54.3848Z" fill-rule="evenodd" clip-rule="evenodd" fill="url(#logoFill)"/>
+      <path d="M60 45.6L63.8693 56.1307L74.4 60L63.8693 63.8693L60 74.4L56.1307 63.8693L45.6 60L56.1307 56.1307L60 45.6Z" fill="#fff"/>
+    </g>
+    <g id="bloom" transform="translate(-50 -50) scale(.833333)">
+      <path d="M86.4004 0C104.957 0.000212344 120 15.0432 120 33.5996C120 44.3086 114.99 53.8472 107.186 60C114.99 66.1528 120 75.6914 120 86.4004C120 104.957 104.957 120 86.4004 120C75.6914 120 66.1528 114.99 60 107.186C53.8472 114.99 44.3086 120 33.5996 120C15.0432 120 0.000212357 104.957 0 86.4004C0 75.6917 5.00984 66.1528 12.8135 60C5.00984 53.8472 0 44.3083 0 33.5996C0.000210283 15.0432 15.0432 0.000210295 33.5996 0C44.3083 0 53.8472 5.00984 60 12.8135C66.1528 5.00984 75.6917 0 86.4004 0ZM60 54.3848C58.3559 56.4702 56.4702 58.3559 54.3848 60C56.47 61.644 58.356 63.5291 60 65.6143C61.6438 63.5293 63.5293 61.6438 65.6143 60C63.5291 58.356 61.644 56.47 60 54.3848Z" fill-rule="evenodd" clip-rule="evenodd" fill="url(#bloomFill)"/>
+      <path d="M60 45.6L63.8693 56.1307L74.4 60L63.8693 63.8693L60 74.4L56.1307 63.8693L45.6 60L56.1307 56.1307L60 45.6Z" fill="#fff"/>
+    </g>
+  </defs>
+</svg>
+
+</body>
+</html>
